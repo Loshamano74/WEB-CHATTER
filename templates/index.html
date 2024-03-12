@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wi-Fi Messenger</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .chat-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .message-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .message {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .message .user {
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .message .content {
+            margin-left: 10px;
+        }
+        .message-form {
+            margin-top: 20px;
+        }
+        .message-form input[type="text"] {
+            width: calc(100% - 40px);
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #ced4da;
+            outline: none;
+        }
+        .message-form button {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Welcome, {{ username }}</h1>
+        <ul class="message-list" id="messageList">
+            {% for message in messages %}
+                <li class="message" style="background-color: {{ message.color }}">
+                    <span class="user">{{ message.username }}</span>
+                    <span class="content">{{ message.message }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+        <form class="message-form" id="messageForm">
+            <input type="text" id="messageInput" placeholder="Type your message here">
+            <button type="submit"><i class="fas fa-paper-plane"></i></button>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+            // Function to add a new message to the list
+            function addMessage(message) {
+                var messageList = document.getElementById('messageList');
+                var li = document.createElement('li');
+                li.classList.add('message');
+                li.style.backgroundColor = message.color; // Set background color for the message
+
+                var userSpan = document.createElement('span');
+                userSpan.classList.add('user');
+                userSpan.textContent = message.username;
+
+                var contentSpan = document.createElement('span');
+                contentSpan.classList.add('content');
+                contentSpan.textContent = message.message;
+
+                li.appendChild(userSpan);
+                li.appendChild(contentSpan);
+                messageList.appendChild(li);
+            }
+
+            // Event listener for receiving messages
+            socket.on('message', function(msg) {
+                addMessage(msg);
+            });
+
+            // Event listener for form submission
+            document.getElementById('messageForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                var message = document.getElementById('messageInput').value;
+                socket.emit('message', message);
+                document.getElementById('messageInput').value = '';
+            });
+        });
+    </script>
+</body>
+</html>
