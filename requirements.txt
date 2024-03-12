@@ -1,0 +1,3 @@
+echo "Flask==2.1.0" >> requirements.txt
+echo "Flask-SocketIO==5.1.1" >> requirements.txt
+echo "passlib==1.7.4" >> requirements.txt
