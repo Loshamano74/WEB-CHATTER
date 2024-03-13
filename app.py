@@ -3,7 +3,6 @@ from flask_socketio import SocketIO, emit
 from passlib.hash import sha256_crypt
 import json
 import random
-import atexit
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -20,28 +19,11 @@ def load_users():
     except FileNotFoundError:
         return {}
 
-# Load messages from JSON file
-def load_messages():
-    try:
-        with open('messages.json', 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
+users = load_users()
 
 # Generate a random color for each username
 def generate_random_color():
     return "#{:06x}".format(random.randint(0, 0xFFFFFF))
-
-# Load users and messages when the application starts
-users = load_users()
-messages = load_messages()
-
-# Save users and messages when the application stops
-def save_data():
-    save_users()
-    save_messages()
-
-atexit.register(save_data)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -92,10 +74,6 @@ def handle_message(msg):
 def save_users():
     with open('users.json', 'w') as f:
         json.dump(users, f)
-
-def save_messages():
-    with open('messages.json', 'w') as f:
-        json.dump(messages, f)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='0.0.0.0', allow_unsafe_werkzeug=True)
