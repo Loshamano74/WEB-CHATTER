@@ -1,42 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login - Wi-Fi Messenger</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wi-Fi Messenger</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .chat-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .message-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .message {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .message .user {
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .message .content {
+            margin-left: 10px;
+        }
+        .message-form {
+            margin-top: 20px;
+        }
+        .message-form input[type="text"] {
+            width: calc(100% - 40px);
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #ced4da;
+            outline: none;
+        }
+        .message-form button {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="tab-content">
-            <div class="tab-pane fade show active" id="login">
-                <h1>Login - Wi-Fi Messenger</h1>
-                {% if error %}
-                    <p style="color: red;">Invalid username or password. Please try again.</p>
-                {% endif %}
-                <form id="loginForm" method="POST">
-                    <label for="username">Username:</label><br>
-                    <input type="text" id="username" name="username" required><br>
-                    <label for="password">Password:</label><br>
-                    <input type="password" id="password" name="password" required><br>
-                    <button type="submit" class="btn btn-primary">Login</button>
-                </form>
-            </div>
-            <div class="tab-pane fade" id="register">
-                <h1>Register - Wi-Fi Messenger</h1>
-                <!-- Your registration form goes here -->
-                <!-- Similar to the login form, but with different action -->
-                <form method="POST" action="{{ url_for('index') }}">
-                    <label for="new_username">Username:</label><br>
-                    <input type="text" id="new_username" name="new_username" required><br>
-                    <label for="new_password">Password:</label><br>
-                    <input type="password" id="new_password" name="new_password" required><br>
-                    <button type="submit" class="btn btn-primary">Register</button>
-                </form>
-            </div>
-        </div>
+    <div class="chat-container">
+        <h1>Welcome, {{ username }}</h1>
+        <ul class="message-list" id="messageList">
+            {% for message in messages %}
+                <li class="message" style="background-color: {{ message.color }}">
+                    <span class="user">{{ message.username }}</span>
+                    <span class="content">{{ message.message }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+        <form class="message-form" id="messageForm">
+            <input type="text" id="messageInput" placeholder="Type your message here">
+            <button type="submit"><i class="fas fa-paper-plane"></i></button>
+        </form>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+            // Function to add a new message to the list
+            function addMessage(message) {
+                var messageList = document.getElementById('messageList');
+                var li = document.createElement('li');
+                li.classList.add('message');
+                li.style.backgroundColor = message.color; // Set background color for the message
+
+                var userSpan = document.createElement('span');
+                userSpan.classList.add('user');
+                userSpan.textContent = message.username;
+
+                var contentSpan = document.createElement('span');
+                contentSpan.classList.add('content');
+                contentSpan.textContent = message.message;
+
+                li.appendChild(userSpan);
+                li.appendChild(contentSpan);
+                messageList.appendChild(li);
+            }
+
+            // Event listener for receiving messages
+            socket.on('message', function(msg) {
+                addMessage(msg);
+            });
+
+            // Event listener for form submission
+            document.getElementById('messageForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                var message = document.getElementById('messageInput').value;
+                socket.emit('message', message);
+                document.getElementById('messageInput').value = '';
+            });
+        });
+    </script>
 </body>
 </html>
